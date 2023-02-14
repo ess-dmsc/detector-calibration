@@ -4,16 +4,28 @@
 #include <TF1.h>
 #include <H5Cpp.h>
 #include <TCanvas.h>
+#include <vector>
+
 
 
 class CalibrationCalculator {
 
 public:
+    struct Straw {
+      std::vector<double> measuredPeaks;
+      std::vector<double> simulatedPeaks;
+      bool goodStraw;
+      std::vector<double> calibrationParameters;
+    };
+
+  std::map<int, Straw> strawInfo;
+
   // whether graphs get saved to file or not
   bool plottingGraphs = true;
 
   // number of pixels per straw
   int strawResolution = 512;
+  int nStraws = 896;
   
   // once calibration parameters are calculated, go from straw n to (resolution - n) and check that calibration parameters don't push the values higher than resolution or lower than 0
   int rangeChecking = 20;
@@ -46,7 +58,7 @@ public:
 
   void writePeaksToFile(std::vector<double> peaks, std::string filename);
   void loadPeaksFromFile();
-  void saveCalibrationParametersToFile(std::map<int, std::vector<double>> calibrationPerStraw);
+  void saveCalibrationParametersToFile();
 
   // sorts the elements in array a from smallest to largest, and re-organises
   // array b the same way, regardless of the numerical order of elements in b

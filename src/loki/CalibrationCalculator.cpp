@@ -8,26 +8,25 @@ void CalibrationCalculator::calculateCalibration(std::vector<std::vector<int>> m
   std::map<int, std::vector<double>> calibrationPerStraw;
   for (int strawNumber = 0; strawNumber < measuredEvents.size(); strawNumber++){
   // for (int strawNumber = 0; strawNumber < 1; strawNumber++){
-    std::vector<double> measuredPeaks = getStrawPeaksGaussian(measuredEvents[strawNumber], strawNumber, "measured");
-    std::vector<double> simulatedPeaks = getStrawPeaksSimple(simulatedEvents[strawNumber], strawNumber, "simulated");
+    strawInfo[strawNumber].measuredPeaks = getStrawPeaksGaussian(measuredEvents[strawNumber], strawNumber, "measured");
+    strawInfo[strawNumber].simulatedPeaks = getStrawPeaksGaussian(measuredEvents[strawNumber], strawNumber, "measured");
     
 
-    if (measuredPeaks.size() +1 != simulatedPeaks.size()){
-      std::cout << "npeaks doesn't match, measured = " + std::to_string(measuredPeaks.size()) + " and simulated = " + std::to_string(simulatedPeaks.size()) << std::endl;
+    if (strawInfo[strawNumber].measuredPeaks.size() +1 != strawInfo[strawNumber].simulatedPeaks.size()){
+      std::cout << "npeaks doesn't match, measured = " + std::to_string(strawInfo[strawNumber].measuredPeaks.size()) + " and simulated = " + std::to_string(strawInfo[strawNumber].simulatedPeaks.size()) << std::endl;
       //TODO, determine way to filter peaks so that they match
     }
     else{
-      std::cout << "npeaks match!!! " + std::to_string(measuredPeaks.size())<< std::endl;
-      std::vector<double> calibrationParameters = calculateStrawCalibrationParameters(measuredPeaks, simulatedPeaks, strawNumber);
-      calibrationPerStraw[strawNumber] = calibrationParameters;
+      std::cout << "npeaks match!!! " + std::to_string(strawInfo[strawNumber].measuredPeaks.size())<< std::endl;
+      strawInfo[strawNumber].calibrationParameters = calculateStrawCalibrationParameters(strawInfo[strawNumber].measuredPeaks, strawInfo[strawNumber].simulatedPeaks, strawNumber);
     }
     
   }
- saveCalibrationParametersToFile(calibrationPerStraw);
+ saveCalibrationParametersToFile();
 
 }
 
-void CalibrationCalculator::saveCalibrationParametersToFile(std::map<int, std::vector<double>> calibrationPerStraw){
+void CalibrationCalculator::saveCalibrationParametersToFile(){
   using json = nlohmann::json;
 
   // Create a JSON object
@@ -39,13 +38,13 @@ void CalibrationCalculator::saveCalibrationParametersToFile(std::map<int, std::v
   std::vector<std::vector<double>> polynomials;
   // Create an array of polynomials
   for(double i = 0.0; i < 128*7; i++){
-    if (calibrationPerStraw.find(i) == calibrationPerStraw.end()){
+    if (strawInfo.find(i) == strawInfo.end()){
       std::vector<double> cal = {i, 0.0, 0.0, 0.0, 0.0};
       polynomials.push_back(cal);
     }
     else{
       std::vector<double> cal = {i};
-      cal.insert(cal.end(), calibrationPerStraw[i].begin(), calibrationPerStraw[i].end());
+      cal.insert(cal.end(), strawInfo[i].calibrationParameters.begin(), strawInfo[i].calibrationParameters.end());
       polynomials.push_back(cal);
     }
   }
