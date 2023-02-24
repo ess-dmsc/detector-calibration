@@ -2,23 +2,28 @@
 #include <iostream>
 #include <fstream> 
 #include <TGraph.h>
-#include <nlohmann/json.hpp>
 
 void CalibrationCalculator::calculateCalibration(std::vector<std::vector<int>> measuredEvents, std::vector<std::vector<int>> simulatedEvents){
   std::map<int, std::vector<double>> calibrationPerStraw;
   for (int strawNumber = 0; strawNumber < measuredEvents.size(); strawNumber++){
   // for (int strawNumber = 0; strawNumber < 1; strawNumber++){
-    strawInfo[strawNumber].measuredPeaks = getStrawPeaksGaussian(measuredEvents[strawNumber], strawNumber, "measured");
-    strawInfo[strawNumber].simulatedPeaks = getStrawPeaksGaussian(measuredEvents[strawNumber], strawNumber, "measured");
-    
+    strawInfo[strawNumber].measuredHitsCount = measuredEvents.size();
+    if(strawInfo[strawNumber].measuredHitsCount >= minimumMeasuredHitsCount){
+      strawInfo[strawNumber].measuredPeaks = getStrawPeaksGaussian(measuredEvents[strawNumber], strawNumber, "measured");
+      strawInfo[strawNumber].simulatedPeaks = getStrawPeaksGaussian(measuredEvents[strawNumber], strawNumber, "measured");
+      
 
-    if (strawInfo[strawNumber].measuredPeaks.size() +1 != strawInfo[strawNumber].simulatedPeaks.size()){
-      std::cout << "npeaks doesn't match, measured = " + std::to_string(strawInfo[strawNumber].measuredPeaks.size()) + " and simulated = " + std::to_string(strawInfo[strawNumber].simulatedPeaks.size()) << std::endl;
-      //TODO, determine way to filter peaks so that they match
+      if (strawInfo[strawNumber].measuredPeaks.size() +1 != strawInfo[strawNumber].simulatedPeaks.size()){
+        std::cout << "npeaks doesn't match, measured = " + std::to_string(strawInfo[strawNumber].measuredPeaks.size()) + " and simulated = " + std::to_string(strawInfo[strawNumber].simulatedPeaks.size()) << std::endl;
+        //TODO, determine way to filter peaks so that they match
+      }
+      else{
+        std::cout << "npeaks match!!! " + std::to_string(strawInfo[strawNumber].measuredPeaks.size())<< std::endl;
+        strawInfo[strawNumber].calibrationParameters = calculateStrawCalibrationParameters(strawInfo[strawNumber].measuredPeaks, strawInfo[strawNumber].simulatedPeaks, strawNumber);
+      }
     }
     else{
-      std::cout << "npeaks match!!! " + std::to_string(strawInfo[strawNumber].measuredPeaks.size())<< std::endl;
-      strawInfo[strawNumber].calibrationParameters = calculateStrawCalibrationParameters(strawInfo[strawNumber].measuredPeaks, strawInfo[strawNumber].simulatedPeaks, strawNumber);
+
     }
     
   }
@@ -226,20 +231,26 @@ void CalibrationCalculator::gaussianFit(std::vector<double> x, std::vector<doubl
 }
 
 
-void CalibrationCalculator::writePeaksToFile(std::vector<double> peaks, std::string filename) {
-  std::ofstream file(filename);
-  if (!file.is_open()) {
-    std::cerr << "Error: unable to open file '" << filename << "'" << std::endl;
-    return;
-  }
-  
-  for (double peak : peaks) {
-    file << peak << std::endl;
-  }
-  
-  file.close();
+void CalibrationCalculator::writeStrawInfoToFile(std::string filename) {
+ 
+  nlohmann::json j = strawInfo;
+
+  // Save the JSON data to a file
+  std::ofstream outfile(filename);
+  outfile << j.dump(4);  // Use pretty-printing with 4 spaces for indentation
+  outfile.close();
 }
 
+void CalibrationCalculator::loadStrawInfoFromFile(std::string filename) {
+  // Read the JSON data from the file
+  std::ifstream infile(filename);
+  nlohmann::json j;
+  infile >> j;
+  infile.close();
+
+  // Parse the JSON data into the strawInfo map
+  j.get_to(strawInfo);
+}
 
 void CalibrationCalculator::selectionSort(std::vector<double> a, std::vector<double> b, int n) {
 	int i, j, min;
