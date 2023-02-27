@@ -7,10 +7,10 @@ void CalibrationCalculator::calculateCalibration(std::vector<std::vector<int>> m
   std::map<int, std::vector<double>> calibrationPerStraw;
   for (int strawNumber = 0; strawNumber < measuredEvents.size(); strawNumber++){
   // for (int strawNumber = 0; strawNumber < 1; strawNumber++){
-    strawInfo[strawNumber].measuredHitsCount = measuredEvents.size();
-    if(strawInfo[strawNumber].measuredHitsCount >= minimumMeasuredHitsCount){
-      strawInfo[strawNumber].measuredPeaks = getStrawPeaksGaussian(measuredEvents[strawNumber], strawNumber, "measured");
-      strawInfo[strawNumber].simulatedPeaks = getStrawPeaksGaussian(measuredEvents[strawNumber], strawNumber, "measured");
+    strawInfo[strawNumber]["measuredHitsCount"] = measuredEvents.size();
+    if(strawInfo[strawNumber]["measuredHitsCount"] >= minimumMeasuredHitsCount){
+      strawInfo[strawNumber]["measuredPeaks"] = getStrawPeaksGaussian(measuredEvents[strawNumber], strawNumber, "measured");
+      strawInfo[strawNumber]["simulatedPeaks"] = getStrawPeaksGaussian(measuredEvents[strawNumber], strawNumber, "measured");
       
 
       if (strawInfo[strawNumber].measuredPeaks.size() +1 != strawInfo[strawNumber].simulatedPeaks.size()){
@@ -233,7 +233,8 @@ void CalibrationCalculator::gaussianFit(std::vector<double> x, std::vector<doubl
 
 void CalibrationCalculator::writeStrawInfoToFile(std::string filename) {
  
-  nlohmann::json j = strawInfo;
+  nlohmann::json j;
+  j = to_json(strawInfo);
 
   // Save the JSON data to a file
   std::ofstream outfile(filename);

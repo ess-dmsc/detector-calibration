@@ -12,35 +12,7 @@
 class CalibrationCalculator {
 
 public:
-    struct Straw {
-      std::vector<double> measuredPeaks;
-      std::vector<double> simulatedPeaks;
-      bool goodStraw;
-      std::vector<double> calibrationParameters;
-      int measuredHitsCount;
-
-      // Define a to_json method for Straw
-    void to_json(nlohmann::json& j) const {
-        j = {
-            {"measuredPeaks", measuredPeaks},
-            {"simulatedPeaks", simulatedPeaks},
-            {"goodStraw", goodStraw},
-            {"calibrationParameters", calibrationParameters},
-            {"measuredHitsCount", measuredHitsCount}
-        };
-    }
-
-    // Define a from_json method for Straw
-    void from_json(const nlohmann::json& j) {
-        j.at("measuredPeaks").get_to(measuredPeaks);
-        j.at("simulatedPeaks").get_to(simulatedPeaks);
-        j.at("goodStraw").get_to(goodStraw);
-        j.at("calibrationParameters").get_to(calibrationParameters);
-        j.at("measuredHitsCount").get_to(measuredHitsCount);
-    }
-    };
-
-  std::map<int, Straw> strawInfo;
+  std::vector<nlohmann::json> strawInfo;
 
   // whether graphs get saved to file or not
   bool plottingGraphs = true;
@@ -92,10 +64,5 @@ public:
 
   std::vector<double> applyCalibrationParams(std::vector<double> measured, std::vector<double> params);
   
-  void to_json(nlohmann::json& j, const std::map<int, Straw>& m) {
-    for (auto& [key, value] : m) {
-        j[std::to_string(key)] = value;
-    }
-  }
 
 };
